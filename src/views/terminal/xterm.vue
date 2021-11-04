@@ -12,7 +12,7 @@ export default {
   props: {
     socketURI: {
       type: String,
-      default: "ws://127.0.0.1:8080/webssh"
+      default: "ws://127.0.0.1:8111/webssh"
     }
   },
   mounted() {
@@ -30,17 +30,25 @@ export default {
           host: "127.0.0.1", //IP
           port: "22", //端口号
           username: "root", //用户名
-          password: "123456" //密码*/
+          password: "123" //密码*/
         })
       );
       const term = new Terminal({
-        cols: 97,
-        rows: 37,
-        cursorBlink: true, // 光标闪烁
-        cursorStyle: "block", // 光标样式  null | 'block' | 'underline' | 'bar'
-        scrollback: 800, //回滚
-        tabStopWidth: 8, //制表宽度
-        screenKeys: true
+        rendererType: "canvas", //渲染类型
+        rows: 40, //行数
+        cols: 40, // 不指定行数，自动回车后光标从下一行开始
+        convertEol: true, //启用时，光标将设置为下一行的开头
+        // scrollback: 50, //终端中的回滚量
+        disableStdin: false, //是否应禁用输入
+        windowsMode: true, // 根据窗口换行
+        // cursorStyle: "underline", //光标样式
+        cursorBlink: true, //光标闪烁
+        theme: {
+          foreground: "#ECECEC", //字体
+          background: "#000000", //背景色
+          cursor: "help", //设置光标
+          lineHeight: 20
+        }
       });
       const attachAddon = new AttachAddon(this.socket);
       const fitAddon = new FitAddon();
@@ -50,6 +58,19 @@ export default {
       fitAddon.fit();
       term.focus();
       this.term = term;
+      // 监视命令行输入
+      this.term.onData(data => {
+        let dataWrapper = data;
+        if (dataWrapper === "\r") {
+          dataWrapper = "\n";
+        } else if (dataWrapper === "\u0003") {
+          // 输入ctrl+c
+          dataWrapper += "\n";
+        }
+        // 将输入的命令通知给后台，后台返回数据。
+        this.socket.send(JSON.stringify({ operate: "command", command: dataWrapper }));
+      });
+      // window.addEventListener("resize", this.onTerminalResize);
     },
     initSocket() {
       this.socket = new WebSocket(this.socketURI);
