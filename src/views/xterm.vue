@@ -1,29 +1,5 @@
 <template>
-  <div>
-    <div class="my-form">
-      <el-form :inline="true" :model="formInline" class="demo-form-inline">
-        <el-form-item label="ip">
-          <el-input v-model="formInline.host" placeholder="ip"></el-input>
-        </el-form-item>
-        <el-form-item label="端口">
-          <el-input v-model="formInline.port" placeholder="端口"></el-input>
-        </el-form-item>
-        <el-form-item label="用户名">
-          <el-input
-            v-model="formInline.username"
-            placeholder="用户名"
-          ></el-input>
-        </el-form-item>
-        <el-form-item label="密码">
-          <el-input v-model="formInline.password" placeholder="密码"></el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="onSubmit">连接</el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-    <div id="xterm" class="xterm" />
-  </div>
+  <div id="xterm" class="xterm" />
 </template>
 <script>
 import "xterm/css/xterm.css";
@@ -46,36 +22,17 @@ export default {
     this.socket.close();
     this.term.dispose();
   },
-  data() {
-    return {
-      formInline: {
-        operate: "connect",
-        host: "",
-        port: 22,
-        username: "root",
-        password: ""
-      }
-    };
-  },
   methods: {
-    onSubmit() {
-      console.log("submit!");
-      //  JSON.stringify({
-      //   operate: "connect",
-      //   host: "", //IP
-      //   port: "22", //端口号
-      //   username: "root", //用户名
-      //   password: "" //密码*/
-      // })
-       this.initTerm(JSON.stringify(this.formInline));
-      // if (this.WebSocket) {
-      //   this.initTerm(JSON.stringify(this.formInline));
-      // } else {
-      //   console.log("请先连接websocket");
-      // }
-    },
-    initTerm(connect) {
-      this.socket.send(connect);
+    initTerm() {
+      this.socket.send(
+        JSON.stringify({
+          operate: "connect",
+          host: "", //IP
+          port: "22", //端口号
+          username: "root", //用户名
+          password: "" //密码*/
+        })
+      );
       const term = new Terminal({
         rendererType: "canvas", //渲染类型
         rows: 40, //行数
@@ -126,7 +83,7 @@ export default {
     socketOnOpen() {
       this.socket.onopen = () => {
         // 链接成功后
-        // this.initTerm();
+        this.initTerm();
       };
     },
     socketOnClose() {
@@ -142,8 +99,3 @@ export default {
   }
 };
 </script>
-<style scoped>
-.my-form{
-  text-align: left !important; 
-}
-</style>
